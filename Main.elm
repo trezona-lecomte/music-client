@@ -1,3 +1,5 @@
+module Main where
+
 import Effects exposing (Never)
 import MusicClient
 import StartApp
@@ -6,7 +8,7 @@ import Task
 
 app =
   StartApp.start
-    { init = MusicClient.Initial
+    { init = MusicClient.init
     , update = MusicClient.update
     , view = MusicClient.view
     , inputs = []
