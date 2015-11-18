@@ -4,14 +4,15 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Effects exposing (Effects)
 import Html.Events exposing (onClick)
-import Events exposing (onChange, onEnter)
 import Http
 import Json.Decode as Json exposing ((:=))
 import Task
 import Signal exposing (..)
-import ColorScheme
-import Flex
 import Debug
+
+import Bootstrap.Html exposing (..)
+import Events exposing (onChange, onEnter)
+import ColorScheme
 
 
 -- MODEL
@@ -64,123 +65,93 @@ update action model =
 
 -- VIEW
 
-
-tile : Html -> Float -> String -> Html
-tile element grow color =
-  let
-      backgroundStyles =
-        ("background-color", color)
-        :: Flex.grow grow
-  in
-      div
-        [ style backgroundStyles ]
-        [ element ]
-
 view : Signal.Address Action -> Model -> Html
 view address model =
-  let
-      topSection    = tile (text "top section") 1 ColorScheme.greyBlue
-      bottomSection = tile (text "bottom section") 1 ColorScheme.blue
-      leftSection   = tile (text "left section") 1 ColorScheme.lightGrey
-      rightSection  = tile (text "right section") 1 ColorScheme.mediumGrey
-      centerSection = tile (searchPane address model) 4 ColorScheme.green
-
-      styleList =
-        Flex.direction Flex.Horizontal
-        ++ Flex.grow 8
-        ++ Flex.display
-
-      mainSection =
-        div
-          [ style styleList ]
-          [ leftSection
-          , centerSection
-          , rightSection
-          ]
-
-      mainStyleList =
-        [ ("width", "100vw")
-        , ("height", "100vh")
-        ]
-        ++ Flex.display
-        ++ Flex.direction Flex.Vertical
-
-  in
-      div
-        [ style mainStyleList ]
-        [ topSection
-        , mainSection
-        , bottomSection
-        ]
-
-searchPane : Signal.Address Action -> Model -> Html
-searchPane address model =
   div
-    []
-    [ searchForm address model
-    , resultList address model
+    [style [("margin", "20px 0")]]
+    [ bootstrap
+    , containerFluid_
+        [ searchForm address model
+        , resultsList address model
+        ]
     ]
 
-searchForm : Signal.Address Action -> Model -> Html
 searchForm address model =
   div
-    [ class "flex-form"
+    [ class "input-group"
     ]
     [ input
         [ type' "text"
+        , class "form-control"
+        , placeholder "Search for..."
         , value model.query
         , onChange address UpdateQuery
         , onEnter address SubmitQuery
-        , style
-            [
-            ]
         ]
         []
-    , select
-        [ name "search-type"
-        , style
-            [
-            ]
+    -- , div
+    --     [ class "btn-group"
+    --     ]
+    --     [ button
+    --         [ class "btn btn-default dropdown-toggle"
+    --         , attribute "data-toggle" "dropdown"
+    --         , attribute "aria-haspopup" "true"
+    --         , attribute "aria-expanded" "false"
+    --         ]
+    --         [
+    --          text "Album"
+    --         , span [ class "caret" ] [ ]
+    --         ]
+    --     , ul
+    --         [ class "dropdown-menu"
+    --         ]
+    --         [
+    --           li [] [ a [ href "#" ] [ text "Artist" ] ]
+    --         , li [] [ a [ href "#" ] [ text "Genre" ] ]
+    --         , li [] [ a [ href "#" ] [ text "Song" ] ]
+    --         , li
+    --             [ attribute "role" "separator"
+    --             , class "divider" ]
+    --           [ ]
+    --         , li [] [ a [ href "#" ] [ text "Everything" ] ]
+    --         ]
+    --     ]
+    , span
+        [ class "input-group-btn"
         ]
-        [ option [ value "Album" ] [ text "Album" ]
-        , option [ value "Artist" ] [ text "Artist" ]
-        , option [ value "Song" ] [ text "Song" ]
+        [ (btnDefault_ { btnParam | label <- Just "Search" } address SubmitQuery )
         ]
-    , button
-        [ type' "submit"
-        , value "Search"
-        , onClick address SubmitQuery
-        , style
-            [
-            ]
-        ]
-        []
     ]
 
-resultList : Signal.Address Action -> Model -> Html
-resultList address model =
+resultsList address model =
   let
-    toResult album =
+    toEntry answer =
       div
-        [ class "item" ]
-        [ resultView album ]
+        [class "col-xs-2 col-md-3"]
+        [resultView answer]
   in
-    div
-      [ ]
-      (List.map toResult model.albums)
+    row_ (List.map toEntry model.albums)
+
 
 resultView : Album -> Html
-resultView album =
-  div [ class "result" ]
+resultView answer =
+  div [class "panel panel-info"]
       [ div
-          [class "result-heading"]
-          [text "Result"]
+          [class "panel-heading"]
+          [text "Album"]
       , div
-          [ class "result-body"
+          [ class "panel-body"
           , style [("height", "10rem")]
           ]
-          [text album.name]
+          [text answer.name]
       ]
+
+bootstrap =
+  node "link"
+    [ href "/bootstrap-3.3.5-dist/css/bootstrap.min.css"
+    , rel "stylesheet"
+    ]
+    []
 
 
 -- EFFECTS
