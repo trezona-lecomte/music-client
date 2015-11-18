@@ -9,6 +9,8 @@ import Http
 import Json.Decode as Json exposing ((:=))
 import Task
 import Signal exposing (..)
+import ColorScheme
+import Flex
 import Debug
 
 
@@ -62,105 +64,67 @@ update action model =
 
 -- VIEW
 
+
+tile : Html -> Float -> String -> Html
+tile element grow color =
+  let
+      backgroundStyles =
+        ("background-color", color)
+        :: Flex.grow grow
+  in
+      div
+        [ style backgroundStyles ]
+        [ element ]
+
 view : Signal.Address Action -> Model -> Html
 view address model =
-  div [ class "wrapper"
-      , style
-        [ ("display", "flex")
-        , ("flex-direction", "column")
-        -- , ("justify-content", "space-between")
-        , ("flex-wrap", "nowrap")
-        -- , ("justify-content", "flex-start")
-        -- , ("align-items", "stretch")
-        -- , ("align-content", "stretch")
-        , ("width", "100vw")
-        , ("height", "100%")
-        , ("background-image", "linear-gradient(180deg, #D4B06A 0%, #152A55 100%)")
-        ]
-      ]
-      [ div
-          [ class "container"
-          , id "top-section"
-          , style
-            [ ("display", "flex")
+  let
+      topSection    = tile (text "top section") 1 ColorScheme.greyBlue
+      bottomSection = tile (text "bottom section") 1 ColorScheme.blue
+      leftSection   = tile (text "left section") 1 ColorScheme.lightGrey
+      rightSection  = tile (text "right section") 1 ColorScheme.mediumGrey
+      centerSection = tile (searchPane address model) 4 ColorScheme.green
 
-            -- , ("flex", "1")
-            -- , ("align-self", "flex-start")
-            , ("flex-basis", "40vh")
-            -- , ("justify-content", "center")
-            -- , ("align-items", "center")
-            , ("border", "5px solid mistyrose")
-            ]
+      styleList =
+        Flex.direction Flex.Horizontal
+        ++ Flex.grow 8
+        ++ Flex.display
+
+      mainSection =
+        div
+          [ style styleList ]
+          [ leftSection
+          , centerSection
+          , rightSection
           ]
-        [ ]
-      , div
-        [ class "container"
-        , id "top-section"
-        , style
-          [ ("display", "100%")
-            -- , ("flex", "1")
-            -- , ("align-self", "flex-start")
-          , ("flex-basis", "10vh")
-          -- , ("justify-content", "center")
-          -- , ("align-items", "center")
-          , ("border", "5px solid mistyrose")
-          ]
+
+      mainStyleList =
+        [ ("width", "100vw")
+        , ("height", "100vh")
         ]
-        [ searchForm address model
+        ++ Flex.display
+        ++ Flex.direction Flex.Vertical
+
+  in
+      div
+        [ style mainStyleList ]
+        [ topSection
+        , mainSection
+        , bottomSection
         ]
-    , div
-        [ class "container"
-        , id "top-section"
-        , style
-          [ ("display", "fle")
-           , ("flex", "1 1 auto")
-          -- , ("flex-wrap", "nowrap")
-            -- , ("align-self", "flex-end")
-          , ("flex-basis", "40vh")
-          , ("border", "5px solid goldenrod")
-          -- , ("justify-content", "center")
-          -- , ("align-items", "center")
-          ]
-        ]
-        [ resultList address model
-        ]
+
+searchPane : Signal.Address Action -> Model -> Html
+searchPane address model =
+  div
+    []
+    [ searchForm address model
+    , resultList address model
     ]
-
-    -- <form  class="flex-form">
-
-    --   <input type="search" placeholder="Where do you want to go?">
-
-    --   <label for="from">From</label>
-    --   <input type="date" name="from">
-
-    --   <label for="from">To</label>
-    --   <input type="date" name="to">
-
-    --   <select name="" id="">
-    --     <option value="1">1 Guest</option>
-    --     <option value="2">2 Guest</option>
-    --     <option value="3">3 Guest</option>
-    --     <option value="4">4 Guest</option>
-    --     <option value="5">5 Guest</option>
-    --   </select>
-
-    --   <input type="submit" value="Search">
-
-    -- </form>
-
 
 searchForm : Signal.Address Action -> Model -> Html
 searchForm address model =
   div
     [ class "flex-form"
-    , style
-      [ ("display", "flex")
-      , ("flex-direction", "row")
-      , ("flex-basis", "500px")
-      , ("z-index", "10")
-      , ("border", "20px solid rgba(0,0,0,0.3)")
-      , ("border-radius", "5px")
-      ]
     ]
     [ input
         [ type' "text"
@@ -168,13 +132,15 @@ searchForm address model =
         , onChange address UpdateQuery
         , onEnter address SubmitQuery
         , style
-            [ ("flex", "3 1 200px") ]
+            [
+            ]
         ]
         []
     , select
         [ name "search-type"
         , style
-            [ ("flex", "1 1 50px") ]
+            [
+            ]
         ]
         [ option [ value "Album" ] [ text "Album" ]
         , option [ value "Artist" ] [ text "Artist" ]
@@ -185,10 +151,7 @@ searchForm address model =
         , value "Search"
         , onClick address SubmitQuery
         , style
-            [ ("flex", "2 1 50px")
-            , ("background", "#061639")
-            , ("border", "1px solid #061639")
-            , ("color", "white")
+            [
             ]
         ]
         []
