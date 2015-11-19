@@ -10,7 +10,6 @@ import Task
 import Signal exposing (..)
 import Debug
 
-import Bootstrap.Html exposing (..)
 import Events exposing (onChange, onEnter)
 import ColorScheme
 
@@ -48,7 +47,7 @@ update : Action -> Model -> (Model, Effects Action)
 update action model =
   case action of
     UpdateQuery newQuery ->
-      ( { model | query <- newQuery }
+      ( { model | query = newQuery }
       , Effects.none
       ) |> Debug.watch "UpdateQuery"
 
@@ -58,9 +57,12 @@ update action model =
       ) |> Debug.watch "SubmitQuery"
 
     ReceiveAlbums maybeAlbums ->
-      ( { model | albums <- (Maybe.withDefault [] maybeAlbums) }
+      ( { model | albums = (Maybe.withDefault [] maybeAlbums) }
       , Effects.none
       ) |> Debug.watch "ReceiveAlbums"
+
+    NoOp ->
+      (model, Effects.none)
 
 
 -- VIEW
@@ -69,8 +71,8 @@ view : Signal.Address Action -> Model -> Html
 view address model =
   div
     [style [("margin", "20px 0")]]
-    [ bootstrap
-    , containerFluid_
+    [ div
+        [ class "container-fluid" ]
         [ searchForm address model
         , resultsList address model
         ]
@@ -89,69 +91,59 @@ searchForm address model =
         , onEnter address SubmitQuery
         ]
         []
-    -- , div
-    --     [ class "btn-group"
-    --     ]
-    --     [ button
-    --         [ class "btn btn-default dropdown-toggle"
-    --         , attribute "data-toggle" "dropdown"
-    --         , attribute "aria-haspopup" "true"
-    --         , attribute "aria-expanded" "false"
-    --         ]
-    --         [
-    --          text "Album"
-    --         , span [ class "caret" ] [ ]
-    --         ]
-    --     , ul
-    --         [ class "dropdown-menu"
-    --         ]
-    --         [
-    --           li [] [ a [ href "#" ] [ text "Artist" ] ]
-    --         , li [] [ a [ href "#" ] [ text "Genre" ] ]
-    --         , li [] [ a [ href "#" ] [ text "Song" ] ]
-    --         , li
-    --             [ attribute "role" "separator"
-    --             , class "divider" ]
-    --           [ ]
-    --         , li [] [ a [ href "#" ] [ text "Everything" ] ]
-    --         ]
-    --     ]
+    , select
+        [ name "search-type"
+        , class "form-control"
+        ]
+        [ option [ value "Everything" ] [ text "Everything" ]
+        , option [ value "Album" ] [ text "Album" ]
+        , option [ value "Artist" ] [ text "Artist" ]
+        , option [ value "Song" ] [ text "Song" ]
+        ]
     , span
         [ class "input-group-btn"
         ]
-        [ (btnDefault_ { btnParam | label <- Just "Search" } address SubmitQuery )
+        [ button
+            [ class "btn btn-default"
+            , onClick address SubmitQuery
+            ]
+            [ text "Search" ]
         ]
     ]
 
 resultsList address model =
   let
-    toEntry answer =
-      div
-        [class "col-xs-2 col-md-3"]
-        [resultView answer]
+    toEntry album =
+      li
+        [ class "list-group-item col-md-4 col-sm-6" ]
+        [ resultView album ]
   in
-    row_ (List.map toEntry model.albums)
+    ul
+    [ class "list-group row" ]
+    (List.map toEntry model.albums)
 
 
 resultView : Album -> Html
-resultView answer =
-  div [class "panel panel-info"]
+resultView album =
+  div [class "media panel"]
       [ div
-          [class "panel-heading"]
-          [text "Album"]
-      , div
-          [ class "panel-body"
-          , style [("height", "10rem")]
+          [ class "media-left"]
+          [ a [ href "https://play.spotify.com/album/3EkYAh7JiJNSUxzhVLJqnL?play=true&utm_source=open.spotify.com&utm_medium=open"
+              ]
+              [ img [ class "media-object"
+                    , src "http://st.cdjapan.co.jp/pictures/s/03/21/HSE-60064.jpg?v=1"
+                    ] []
+              ]
           ]
-          [text answer.name]
+      , div
+          [ class "media-body" ]
+          [ h4 [ class "media-heading" ]
+               [ text album.name ]
+          ]
       ]
 
-bootstrap =
-  node "link"
-    [ href "/bootstrap-3.3.5-dist/css/bootstrap.min.css"
-    , rel "stylesheet"
-    ]
-    []
+row =
+  div [class "row"]
 
 
 -- EFFECTS
