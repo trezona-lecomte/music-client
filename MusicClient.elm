@@ -1,12 +1,14 @@
 module MusicClient where
 
+import String
+import Array exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Effects exposing (Effects)
 import Html.Events exposing (onClick)
 import Http
 import Json.Decode as Json exposing ((:=))
-import Task
+import Task exposing (..)
 import Signal exposing (..)
 import Debug
 
@@ -18,18 +20,28 @@ import ColorScheme
 
 type alias Model =
   { query : String
-  , albums : List Album
+  , category : String
+  , items : List Item
   }
 
 
-type alias Album =
+type alias Item =
   { name : String
+  , url : String
+  , category : String
+  , images : List Image
   }
+
+type alias Image =
+  { url : String
+  , width : Int
+  , height : Int
+}
 
 
 init : (Model, Effects Action)
 init =
-  ( Model "" []
+  ( Model "" "album" []
   , Effects.none
   )
 
@@ -39,8 +51,9 @@ init =
 type Action
   = NoOp
   | UpdateQuery String
+  | UpdateCategory String
   | SubmitQuery
-  | ReceiveAlbums (Maybe (List Album))
+  | ReceiveItems (Maybe (List Item))
 
 
 update : Action -> Model -> (Model, Effects Action)
@@ -49,101 +62,25 @@ update action model =
     UpdateQuery newQuery ->
       ( { model | query = newQuery }
       , Effects.none
-      ) |> Debug.watch "UpdateQuery"
+      )
+
+    UpdateCategory newCategory ->
+      ( { model | category = (String.toLower newCategory) }
+      , Effects.none
+      )
 
     SubmitQuery ->
       ( model
-      , search model.query
-      ) |> Debug.watch "SubmitQuery"
+      , search model.query model.category
+      ) |> Debug.log "SubmitQuery"
 
-    ReceiveAlbums maybeAlbums ->
-      ( { model | albums = (Maybe.withDefault [] maybeAlbums) }
+    ReceiveItems maybeItems ->
+      ( { model | items = (Maybe.withDefault [] maybeItems) }
       , Effects.none
-      ) |> Debug.watch "ReceiveAlbums"
+      ) |> Debug.log "ReceiveItems"
 
     NoOp ->
       (model, Effects.none)
-
-
--- VIEW
-
-view : Signal.Address Action -> Model -> Html
-view address model =
-  div
-    [style [("margin", "20px 0")]]
-    [ div
-        [ class "container-fluid" ]
-        [ searchForm address model
-        , resultsList address model
-        ]
-    ]
-
-searchForm address model =
-  div
-    [ class "input-group"
-    ]
-    [ input
-        [ type' "text"
-        , class "form-control"
-        , placeholder "Search for..."
-        , value model.query
-        , onChange address UpdateQuery
-        , onEnter address SubmitQuery
-        ]
-        []
-    , select
-        [ name "search-type"
-        , class "form-control"
-        ]
-        [ option [ value "Everything" ] [ text "Everything" ]
-        , option [ value "Album" ] [ text "Album" ]
-        , option [ value "Artist" ] [ text "Artist" ]
-        , option [ value "Song" ] [ text "Song" ]
-        ]
-    , span
-        [ class "input-group-btn"
-        ]
-        [ button
-            [ class "btn btn-default"
-            , onClick address SubmitQuery
-            ]
-            [ text "Search" ]
-        ]
-    ]
-
-resultsList address model =
-  let
-    toEntry album =
-      li
-        [ class "list-group-item col-md-4 col-sm-6" ]
-        [ resultView album ]
-  in
-    ul
-    [ class "list-group row" ]
-    (List.map toEntry model.albums)
-
-
-resultView : Album -> Html
-resultView album =
-  div [class "media panel"]
-      [ div
-          [ class "media-left"]
-          [ a [ href "https://play.spotify.com/album/3EkYAh7JiJNSUxzhVLJqnL?play=true&utm_source=open.spotify.com&utm_medium=open"
-              ]
-              [ img [ class "media-object"
-                    , src "http://st.cdjapan.co.jp/pictures/s/03/21/HSE-60064.jpg?v=1"
-                    ] []
-              ]
-          ]
-      , div
-          [ class "media-body" ]
-          [ h4 [ class "media-heading" ]
-               [ text album.name ]
-          ]
-      ]
-
-row =
-  div [class "row"]
 
 
 -- EFFECTS
@@ -151,24 +88,146 @@ row =
 (=>) = (,)
 
 
-search : String -> Effects Action
-search query =
-  Http.get decodeAlbums (searchUrl query)
+search : String -> String -> Effects Action
+search query category =
+  Http.get (itemList category) (searchUrl query category)
     |> Task.toMaybe
-    |> Task.map ReceiveAlbums
+    |> Task.map ReceiveItems
     |> Effects.task
 
-searchUrl : String -> String
-searchUrl query =
+searchUrl : String -> String -> String
+searchUrl query category=
   Http.url "https://api.spotify.com/v1/search"
     [ "q" => query
-    , "type" => "album"
+    , "type" => category
     ]
 
-decodeAlbums : Json.Decoder (List Album)
-decodeAlbums =
+itemList : String -> Json.Decoder (List Item)
+itemList category =
   let
-    albumName =
-      Json.map Album ("name" := Json.string)
+    collectionName = category ++ "s"
   in
-    (Json.at ["albums", "items"] (Json.list albumName))
+    Json.at [collectionName, "items"] <| Json.list <|
+      Json.object4 Item
+        ("name" := Json.string)
+        ("href" := Json.string)
+        ("type" := Json.string)
+        ("images" := imageList)
+
+imageList : Json.Decoder (List Image)
+imageList =
+  Json.list <|
+    Json.object3 Image
+      ("url" := Json.string)
+      ("width" := Json.int)
+      ("height" := Json.int)
+
+
+-- VIEW ---------------------------------------------------------------------
+
+view : Signal.Address Action -> Model -> Html
+view address model =
+  div
+    [style [("margin", "20px 0")]]
+    [ div
+        [ class "container-fluid" ]
+        [ div [ class "col-md-1" ] []
+        , div [ class "col-md-10" ]
+              [ searchForm address model ]
+        , div [ class "col-md-1" ] []
+        ]
+    , div
+        [ class "container-fluid" ]
+        [ div [ class "col-md-2 col-sm-2" ] []
+        , div [ class "col-md-9 col-sm-10" ]
+              [ resultList address model ]
+        , div [ class "col-md-1 col-sm-0" ] []
+        ]
+    ]
+
+searchForm address model =
+  div
+    [ class "input-group row"
+    , id "search-form"
+    ]
+    [ input
+        [ type' "text"
+        , class "form-control"
+        , id "search-text-input"
+        , placeholder "Search for..."
+        , value model.query
+        , onChange address UpdateQuery
+        , onEnter address SubmitQuery
+        ]
+        []
+    , div
+      [ class "input-group-btn" ]
+      [ select
+          [ name "search-type"
+          , class "form-control"
+          , id "search-type-dropdown"
+          , onChange address UpdateCategory
+          ]
+          [ option [ value "Album" ] [ text "Album" ]
+          , option [ value "Artist" ] [ text "Artist" ]
+          , option [ value "Track" ] [ text "Track" ]
+          ]
+      ]
+    , div
+      [ class "input-group-btn" ]
+      [ button
+          [ class "btn btn-default form-control"
+          , id "search-button"
+          , onClick address SubmitQuery
+          ]
+          [ text "Search"
+          ]
+      ]
+    ]
+
+resultList address model =
+  let
+    toEntry item =
+      li
+        [ class "list-group-item col-md-3 col-sm-4 item-panel" ]
+        [ itemPanel item ]
+  in
+    ul
+    [ class "list-group row"
+    , id "result-list"
+    ]
+    (List.map toEntry model.items)
+
+
+imageUrl : Item -> String
+imageUrl item =
+  let
+    smallestImage =
+      Maybe.withDefault (Image "" 0 0) (List.head (List.reverse item.images))
+  in
+    smallestImage.url
+
+itemPanel : Item -> Html
+itemPanel item =
+  div [class "media panel"]
+      [ div
+        [ class "media-left"]
+        [ a [ href item.url
+            ]
+            [ img [ class "media-object"
+                  , src (imageUrl item)
+                  ] []
+            ]
+        ]
+      , div
+        [ class "media-body" ]
+        [ h4 [ class "media-heading" ]
+             [ text item.name ]
+        ]
+      ]
+
+row =
+  div [class "row"]
+
+
+--------------------------------------------------------------------------------
