@@ -88,24 +88,15 @@ view : Signal.Address Action -> Model -> Html
 view address model =
   div
     [ class "wrap container-fud" ]
-    [ flexboxgridCss
-    , customCss
+    [ div
+        [ class "container-fluid" ]
+        [ searchForm address model ]
     , div
         [ class "container-fluid" ]
-        [ div [ class "col-md-1" ] []
-        , div [ class "col-md-10" ]
-              [ searchForm address model ]
-        , div [ class "col-md-1" ] []
-        ]
-    , div
-        [ class "container-fluid" ]
-        [ div [ class "col-md-2 col-sm-2" ] []
-        , div [ class "col-md-9 col-sm-10" ]
-              [ resultList address model ]
-        , div [ class "col-md-1 col-sm-0" ] []
-        ]
+        [ Album.albumList model.albums]
     ]
 
+searchForm : Signal.Address Action -> Model -> Html
 searchForm address model =
   div
     [ class "input-group row"
@@ -132,37 +123,3 @@ searchForm address model =
           ]
       ]
     ]
-
-resultList address model =
-  let
-    toEntry item =
-      li
-        [ class "list-group-item col-md-3 col-sm-4 item-panel" ]
-        [ Album.view item ]
-  in
-    ul
-    [ class "list-group row"
-    , id "result-list"
-    ]
-    (List.map toEntry model.albums)
-
-row =
-  div [class "row"]
-
-flexboxgridCss =
-  node "link"
-    [ href "css/flexboxgrid.css"
-    , rel "stylesheet"
-    ]
-    []
-
-customCss =
-  node "link"
-    [ href "css/custom.css"
-    , rel "stylesheet"
-    ]
-    []
-
-
-
---------------------------------------------------------------------------------

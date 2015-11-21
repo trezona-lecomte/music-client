@@ -34,8 +34,19 @@ albumListDecoder =
 
 -- VIEW
 
-view : Album -> Html
-view model =
+albumList : List Album -> Html
+albumList albums =
+  div
+    [ ]
+    [ ul
+      [ class "list-group row"
+      , id "result-list"
+      ]
+      (List.map listItem albums)
+    ]
+
+listItem : Album -> Html
+listItem model =
   div
     [ class "media panel" ]
     [ div
