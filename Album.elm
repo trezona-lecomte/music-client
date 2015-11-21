@@ -5,6 +5,7 @@ import Html.Attributes exposing (..)
 import Json.Decode as Json exposing ((:=))
 
 import Image exposing (Image, imageListDecoder)
+import CustomElements exposing (container, box)
 
 -- MODEL
 
@@ -28,19 +29,22 @@ albumListDecoder =
     Json.list <|
       Json.object3 Album
             ("name" := Json.string)
-            ("href" := Json.string)
+            ("external_urls" := externalUrlDecoder)
             ("images" := imageListDecoder)
 
+externalUrlDecoder : Json.Decoder String
+externalUrlDecoder =
+  Json.at ["spotify"] <| Json.string
 
 -- VIEW
 
 albumList : List Album -> Html
 albumList albums =
   div
-    [ ]
+    [ class "container"
+    ]
     [ ul
-      [ class ""
-      , id "album-list"
+      [ class "container album-list"
       ]
       (List.map listItem albums)
     ]
@@ -48,24 +52,25 @@ albumList albums =
 listItem : Album -> Html
 listItem model =
   div
-    [ class "" ]
-    [ div
-        [ class ""]
-        [ a
-            [ href model.url ]
-            [ img
-                [ class ""
-                , src (smallestImageUrl model)
-                ]
-                []
-            ]
+    [ class "box media-object callout primary album-list-item hvr-hollow"
+    ]
+    [ a
+      [ href model.url ]
+      [ div
+        [ class "media-object-section"]
+        [ img
+          [ class "thumbnail"
+          , src (smallestImageUrl model)
+          ]
+          []
         ]
-    , div
-        [ class "" ]
-        [ h4
-            [ class "" ]
-            [ text model.name ]
+      , div
+        [ class "media-object-section middle" ]
+        [ p
+          [ class "" ]
+          [ text model.name ]
         ]
+      ]
     ]
 
 smallestImageUrl : Album -> String

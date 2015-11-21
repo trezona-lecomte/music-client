@@ -20,12 +20,13 @@ type alias Model =
   { query : String
   , category : String
   , albums : List Album.Album
+  , height : String
   }
 
 
 init : (Model, Effects Action)
 init =
-  ( Model "" "album" []
+  ( Model "" "album" [] "100vh"
   , Effects.none
   )
 
@@ -48,14 +49,14 @@ update action model =
       )
 
     SubmitQuery ->
-      ( model
+      ( { model | height = "25vh" }
       , search model.query
-      ) |> Debug.log "SubmitQuery"
+      )
 
     ReceiveAlbums maybeAlbums ->
       ( { model | albums = (Maybe.withDefault [] maybeAlbums) }
       , Effects.none
-      ) |> Debug.log "ReceiveAlbums"
+      )
 
     NoOp ->
       (model, Effects.none)
@@ -93,26 +94,33 @@ view address model =
 
 searchForm : Signal.Address Action -> Model -> Html
 searchForm address model =
-  container
-    [ box
-      [ input
-        [ type' "text"
-        , class ""
-        , id "search-field"
-        , placeholder "Search for..."
-        , value model.query
-        , onChange address UpdateQuery
-        , onEnter address SubmitQuery
+  div
+    [ class "search-container height-transitioned"
+    , style [ ("height", model.height)
+            ]
+    ]
+    [
+      div
+        [ class "search-form" ]
+        [ div
+          [ class "box large-text-input" ]
+            [ input
+            [ type' "text"
+            , class ""
+            , placeholder "Search for an album..."
+            , value model.query
+            , onChange address UpdateQuery
+            , onEnter address SubmitQuery
+            ]
+            []
+          ]
+        , div [ class "box medium-button"]
+          [ button
+            [ class "hollow button"
+            , onClick address SubmitQuery
+            ]
+            [ text "Search"
+            ]
+          ]
         ]
-        []
-      ]
-    , box
-      [ button
-        [ class "hollow button"
-        , id "search-button"
-        , onClick address SubmitQuery
-        ]
-        [ text "Search"
-        ]
-      ]
     ]

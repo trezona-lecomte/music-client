@@ -1,11 +1,53 @@
 .container {
-    height: 100vh;
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
 }
 
 .box {
     display: flex;
+}
+
+.height-transitioned {
+    -webkit-transition: height 1s;
+    transition: height 1s;
+}
+
+.search-container {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.search-form {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    flex-basis: 60vw;
+}
+
+.large-text-input {
+    flex-basis: auto;
+    flex-grow: 2;
+    padding-right: 1vw;
+}
+
+.medium-button {
+    flex-basis: auto;
+    display: flex;
+    justify-content: center;
+}
+
+.album-list {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    width: 100vw;
+    padding-right: 2vw;
+}
+
+.album-list-item {
+    margin: 0.5vw;
+    flex-basis: auto;
+    flex-grow: 1;
+    flex-shrink: 1;
 }
