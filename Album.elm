@@ -39,8 +39,8 @@ albumList albums =
   div
     [ ]
     [ ul
-      [ class "list-group row"
-      , id "result-list"
+      [ class ""
+      , id "album-list"
       ]
       (List.map listItem albums)
     ]
@@ -48,22 +48,22 @@ albumList albums =
 listItem : Album -> Html
 listItem model =
   div
-    [ class "media panel" ]
+    [ class "" ]
     [ div
-        [ class "media-left"]
+        [ class ""]
         [ a
             [ href model.url ]
             [ img
-                [ class "media-object"
+                [ class ""
                 , src (smallestImageUrl model)
                 ]
                 []
             ]
         ]
     , div
-        [ class "media-body" ]
+        [ class "" ]
         [ h4
-            [ class "media-heading" ]
+            [ class "" ]
             [ text model.name ]
         ]
     ]

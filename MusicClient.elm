@@ -1,17 +1,16 @@
 module MusicClient where
 
 import Html exposing (..)
-import String exposing (toLower)
 import Html.Attributes exposing (..)
 import Effects exposing (Effects)
 import Html.Events exposing (onClick)
 import Http
-import Json.Decode as Json exposing ((:=))
 import Task exposing (..)
 import Signal exposing (..)
 import Debug
 
 import Events exposing (onChange, onEnter)
+import CustomElements exposing (container, box)
 import Album
 
 
@@ -87,39 +86,33 @@ searchUrl query =
 view : Signal.Address Action -> Model -> Html
 view address model =
   div
-    [ class "wrap container-fud" ]
-    [ div
-        [ class "container-fluid" ]
-        [ searchForm address model ]
-    , div
-        [ class "container-fluid" ]
-        [ Album.albumList model.albums]
+    [ class "" ]
+    [ searchForm address model
+    , Album.albumList model.albums
     ]
 
 searchForm : Signal.Address Action -> Model -> Html
 searchForm address model =
-  div
-    [ class "input-group row"
-    , id "search-form"
-    ]
-    [ input
+  container
+    [ box
+      [ input
         [ type' "text"
-        , class "form-control"
-        , id "search-text-input"
+        , class ""
+        , id "search-field"
         , placeholder "Search for..."
         , value model.query
         , onChange address UpdateQuery
         , onEnter address SubmitQuery
         ]
         []
-    , div
-      [ class "input-group-btn" ]
+      ]
+    , box
       [ button
-          [ class "btn btn-default form-control"
-          , id "search-button"
-          , onClick address SubmitQuery
-          ]
-          [ text "Search"
-          ]
+        [ class "hollow button"
+        , id "search-button"
+        , onClick address SubmitQuery
+        ]
+        [ text "Search"
+        ]
       ]
     ]
