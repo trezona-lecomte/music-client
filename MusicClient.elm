@@ -1,8 +1,7 @@
 module MusicClient where
 
-import String
-import Array exposing (..)
 import Html exposing (..)
+import String exposing (toLower)
 import Html.Attributes exposing (..)
 import Effects exposing (Effects)
 import Html.Events exposing (onClick)
@@ -13,7 +12,7 @@ import Signal exposing (..)
 import Debug
 
 import Events exposing (onChange, onEnter)
-import ColorScheme
+import Album
 
 
 -- MODEL
@@ -21,22 +20,8 @@ import ColorScheme
 type alias Model =
   { query : String
   , category : String
-  , items : List Item
+  , albums : List Album.Album
   }
-
-
-type alias Item =
-  { name : String
-  , url : String
-  , category : String
-  , images : List Image
-  }
-
-type alias Image =
-  { url : String
-  , width : Int
-  , height : Int
-}
 
 
 init : (Model, Effects Action)
@@ -51,9 +36,8 @@ init =
 type Action
   = NoOp
   | UpdateQuery String
-  | UpdateCategory String
   | SubmitQuery
-  | ReceiveItems (Maybe (List Item))
+  | ReceiveAlbums (Maybe (List Album.Album))
 
 
 update : Action -> Model -> (Model, Effects Action)
@@ -64,20 +48,15 @@ update action model =
       , Effects.none
       )
 
-    UpdateCategory newCategory ->
-      ( { model | category = (String.toLower newCategory) }
-      , Effects.none
-      )
-
     SubmitQuery ->
       ( model
-      , search model.query model.category
+      , search model.query
       ) |> Debug.log "SubmitQuery"
 
-    ReceiveItems maybeItems ->
-      ( { model | items = (Maybe.withDefault [] maybeItems) }
+    ReceiveAlbums maybeAlbums ->
+      ( { model | albums = (Maybe.withDefault [] maybeAlbums) }
       , Effects.none
-      ) |> Debug.log "ReceiveItems"
+      ) |> Debug.log "ReceiveAlbums"
 
     NoOp ->
       (model, Effects.none)
@@ -88,39 +67,19 @@ update action model =
 (=>) = (,)
 
 
-search : String -> String -> Effects Action
-search query category =
-  Http.get (itemList category) (searchUrl query category)
+search : String -> Effects Action
+search query =
+  Http.get Album.albumListDecoder (searchUrl query)
     |> Task.toMaybe
-    |> Task.map ReceiveItems
+    |> Task.map ReceiveAlbums
     |> Effects.task
 
-searchUrl : String -> String -> String
-searchUrl query category=
+searchUrl : String -> String
+searchUrl query =
   Http.url "https://api.spotify.com/v1/search"
     [ "q" => query
-    , "type" => category
+    , "type" => "album"
     ]
-
-itemList : String -> Json.Decoder (List Item)
-itemList category =
-  let
-    collectionName = category ++ "s"
-  in
-    Json.at [collectionName, "items"] <| Json.list <|
-      Json.object4 Item
-        ("name" := Json.string)
-        ("href" := Json.string)
-        ("type" := Json.string)
-        ("images" := imageList)
-
-imageList : Json.Decoder (List Image)
-imageList =
-  Json.list <|
-    Json.object3 Image
-      ("url" := Json.string)
-      ("width" := Json.int)
-      ("height" := Json.int)
 
 
 -- VIEW ---------------------------------------------------------------------
@@ -128,8 +87,10 @@ imageList =
 view : Signal.Address Action -> Model -> Html
 view address model =
   div
-    [style [("margin", "20px 0")]]
-    [ div
+    [ class "wrap container-fud" ]
+    [ flexboxgridCss
+    , customCss
+    , div
         [ class "container-fluid" ]
         [ div [ class "col-md-1" ] []
         , div [ class "col-md-10" ]
@@ -162,19 +123,6 @@ searchForm address model =
         []
     , div
       [ class "input-group-btn" ]
-      [ select
-          [ name "search-type"
-          , class "form-control"
-          , id "search-type-dropdown"
-          , onChange address UpdateCategory
-          ]
-          [ option [ value "Album" ] [ text "Album" ]
-          , option [ value "Artist" ] [ text "Artist" ]
-          , option [ value "Track" ] [ text "Track" ]
-          ]
-      ]
-    , div
-      [ class "input-group-btn" ]
       [ button
           [ class "btn btn-default form-control"
           , id "search-button"
@@ -190,44 +138,31 @@ resultList address model =
     toEntry item =
       li
         [ class "list-group-item col-md-3 col-sm-4 item-panel" ]
-        [ itemPanel item ]
+        [ Album.view item ]
   in
     ul
     [ class "list-group row"
     , id "result-list"
     ]
-    (List.map toEntry model.items)
-
-
-imageUrl : Item -> String
-imageUrl item =
-  let
-    smallestImage =
-      Maybe.withDefault (Image "" 0 0) (List.head (List.reverse item.images))
-  in
-    smallestImage.url
-
-itemPanel : Item -> Html
-itemPanel item =
-  div [class "media panel"]
-      [ div
-        [ class "media-left"]
-        [ a [ href item.url
-            ]
-            [ img [ class "media-object"
-                  , src (imageUrl item)
-                  ] []
-            ]
-        ]
-      , div
-        [ class "media-body" ]
-        [ h4 [ class "media-heading" ]
-             [ text item.name ]
-        ]
-      ]
+    (List.map toEntry model.albums)
 
 row =
   div [class "row"]
+
+flexboxgridCss =
+  node "link"
+    [ href "css/flexboxgrid.css"
+    , rel "stylesheet"
+    ]
+    []
+
+customCss =
+  node "link"
+    [ href "css/custom.css"
+    , rel "stylesheet"
+    ]
+    []
+
 
 
 --------------------------------------------------------------------------------

@@ -1,16 +1,17 @@
 module Main where
 
+
 import Effects exposing (Never)
-import MusicClient
 import StartApp
 import Task
 
+import MusicClient as Client
 
 app =
   StartApp.start
-    { init = MusicClient.init
-    , update = MusicClient.update
-    , view = MusicClient.view
+    { init = Client.init
+    , update = Client.update
+    , view = Client.view
     , inputs = []
     }
 

@@ -1,4 +1,4 @@
-module ColorScheme where
+module Util.ColorScheme where
 
 greyBlue = "rgb(90, 99, 120)"
 
