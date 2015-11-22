@@ -30,9 +30,25 @@ mouse is clicked??
 
 ## Maintaining State
 
+Folding:
+
+    foldl : (a -> b -> b) -> b -> List a -> b
+
+This just reduces a list from the left, used as follows:
+
+    foldl (\number sum -> sum + number) 0 [1, 2, 3]
+    > 6 : number
+
+We can also fold values of a signal:
+
     foldp
       :  (a -> state -> state)
       -> state
       -> Signal a
       -> Signal state
 
+The only difference here is that instead of a list, it takes a signal
+and returns the folded signal:
+
+    state =
+      Signal.foldp (\key count -> count + 1) 0 Keyboard.presses
