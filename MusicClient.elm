@@ -7,10 +7,8 @@ import Html.Events exposing (onClick)
 import Http
 import Task exposing (..)
 import Signal exposing (..)
-import Debug
 
 import Events exposing (onChange, onEnter)
-import CustomElements exposing (container, box)
 import Album
 
 
@@ -44,17 +42,23 @@ update : Action -> Model -> (Model, Effects Action)
 update action model =
   case action of
     UpdateQuery newQuery ->
-      ( { model | query = newQuery }
+      ( { model
+            | query = newQuery
+        }
       , Effects.none
       )
 
     SubmitQuery ->
-      ( { model | height = "25vh" }
+      ( { model
+            | height = "25vh"
+        }
       , search model.query
       )
 
     ReceiveAlbums maybeAlbums ->
-      ( { model | albums = (Maybe.withDefault [] maybeAlbums) }
+      ( { model
+            | albums = (Maybe.withDefault [] maybeAlbums)
+        }
       , Effects.none
       )
 
@@ -87,40 +91,40 @@ searchUrl query =
 view : Signal.Address Action -> Model -> Html
 view address model =
   div
-    [ class "" ]
-    [ searchForm address model
-    , Album.albumList model.albums
-    ]
+  [ class "" ]
+  [ searchForm address model
+  , Album.albumList model.albums
+  ]
 
 searchForm : Signal.Address Action -> Model -> Html
 searchForm address model =
   div
-    [ class "search-container height-transitioned"
-    , style [ ("height", model.height)
-            ]
-    ]
-    [
-      div
-        [ class "search-form" ]
-        [ div
-          [ class "box large-text-input" ]
-            [ input
-            [ type' "text"
-            , class ""
-            , placeholder "Search for an album..."
-            , value model.query
-            , onChange address UpdateQuery
-            , onEnter address SubmitQuery
-            ]
-            []
+  [ class "search-container height-transitioned"
+  , style [ ("height", model.height)
           ]
-        , div [ class "box medium-button"]
-          [ button
-            [ class "hollow button"
-            , onClick address SubmitQuery
-            ]
-            [ text "Search"
-            ]
-          ]
+  ]
+  [ div
+    [ class "search-form" ]
+    [ div
+      [ class "box large-text-input" ]
+      [ input
+        [ type' "text"
+        , class ""
+        , placeholder "Search for an album..."
+        , value model.query
+        , onChange address UpdateQuery
+        , onEnter address SubmitQuery
         ]
+        []
+      ]
+    , div
+      [ class "box medium-button" ]
+      [ button
+        [ class "hollow button"
+        , onClick address SubmitQuery
+        ]
+        [ text "Search"
+        ]
+      ]
     ]
+  ]
