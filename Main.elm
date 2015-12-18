@@ -4,14 +4,14 @@ import Effects exposing (Never)
 import StartApp
 import Task
 
-import MusicClient as Client
+import MusicApp as MusicApp
 
 
 app =
   StartApp.start
-    { init = Client.init
-    , update = Client.update
-    , view = Client.view
+    { init = MusicApp.init
+    , update = MusicApp.update
+    , view = MusicApp.view
     , inputs = []
     }
 

@@ -1,4 +1,4 @@
-module MusicClient where
+module SearchComponent where
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -6,10 +6,10 @@ import Effects exposing (Effects)
 import Html.Events exposing (onClick)
 import Http
 import Task exposing (..)
-import Signal exposing (..)
+import Effects exposing (Effects)
 
-import Events exposing (onChange, onEnter)
 import Album
+import Events exposing (onChange, onEnter)
 
 
 -- MODEL
@@ -21,19 +21,16 @@ type alias Model =
   , height : String
   }
 
-
 init : (Model, Effects Action)
 init =
   ( Model "" "album" [] "100vh"
   , Effects.none
   )
 
-
 -- UPDATE
 
 type Action
-  = NoOp
-  | UpdateQuery String
+  = UpdateQuery String
   | SubmitQuery
   | ReceiveAlbums (Maybe (List Album.Album))
 
@@ -59,11 +56,8 @@ update action model =
       ( { model
             | albums = (Maybe.withDefault [] maybeAlbums)
         }
-      , Effects.none
+      , Effects.none -- use a noFx helper, fool!
       )
-
-    NoOp ->
-      (model, Effects.none)
 
 
 -- EFFECTS
